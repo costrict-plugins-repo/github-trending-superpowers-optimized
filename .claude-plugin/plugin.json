@@ -1,0 +1,12 @@
+{
+  "name": "superpowers-optimized",
+  "description": "Agentic development framework for Claude Code — disciplined workflow routing, TDD enforcement, safety hooks, systematic debugging, and code review",
+  "version": "6.10.0",
+  "author": {
+    "name": "Jesse Vincent, forked by REPOZY"
+  },
+  "homepage": "https://github.com/REPOZY/superpowers-optimized",
+  "repository": "https://github.com/REPOZY/superpowers-optimized",
+  "license": "MIT",
+  "keywords": ["skills", "tdd", "debugging", "code-review", "workflows", "agentic", "token-efficiency", "hooks", "safety", "subagent"]
+}

@@ -1,0 +1,192 @@
+---
+name: writing-plans
+description: >
+  MUST USE after design approval to decompose requirements into executable
+  task plans with verification commands and TDD ordering. Triggers on:
+  "write a plan", "break this down", "plan the implementation", after
+  brainstorming approval. Routed by brainstorming as the next step.
+---
+
+# Writing Plans
+
+Create an implementation plan another agent can execute with minimal ambiguity.
+
+Write for an engineer who has not seen this codebase or this spec. Assume they write idiomatic code in the project's language once they know the exact interface and the exact test, and that they make a reasonable choice wherever the plan leaves one open. What they cannot know is what you decided: which files, which names and signatures, which values from the spec, which tests prove each task. The plan records those decisions. It is not a transcript of the code.
+
+## Output Path
+
+Save to `docs/plans/YYYY-MM-DD-<feature-name>.md`.
+- User preferences for plan location override this default.
+
+## Plan Header
+
+```markdown
+# <Feature Name> Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers-optimized:subagent-driven-development (recommended) or superpowers-optimized:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** <single sentence>
+**Architecture:** <2-4 sentences>
+**Tech Stack:** <languages/libraries/tools>
+**Spec:** <path to the design doc this plan implements, or `none` if there isn't one. The plan argues from the spec, so the spec travels with it — executors read both, and plan conflicts resolve against the spec.>
+**Assumptions:** <list the key assumptions this plan rests on. For each, state what it excludes: "Assumes X — will NOT work if Y."> *(skip only if the plan contains zero conditional logic)*
+
+## Global Constraints
+
+<The project-wide requirements every task is bound by — version floors, dependency limits, naming and copy rules, platform requirements, exact values — one line each, copied verbatim from the spec. Every task's requirements implicitly include this section. Write `none` if there genuinely are none.>
+
+## Review Focus
+
+<Up to five input classes or failure modes the spec implies but no task's tests exercise — the ones most likely to bite a real user, most likely first. One line each: name the input or condition, and the behavior a reasonable person would expect.
+
+A spec is a vision document. It says what the software must do; it does not enumerate every input the software will meet, and its silence about an input is not permission for that input to crash the program.
+
+Write this list once, with the spec in front of you. Then, for each line, add the test that pins it to the task that owns that code, in that task's own step style. An empty section means you checked and found none — not that you skipped the check.>
+
+---
+```
+
+## Scope Check
+
+If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
+
+## File Structure
+
+Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
+
+- Design units with clear boundaries and well-defined interfaces. Each file should have one clear responsibility.
+- Prefer smaller, focused files over large ones that do too much — you reason best about code you can hold in context at once, and your edits are more reliable when files are focused.
+- Files that change together should live together. Split by responsibility, not by technical layer.
+- In existing codebases, follow established patterns. If the codebase uses large files, don't unilaterally restructure — but if a file you're modifying has grown unwieldy, including a split in the plan is reasonable.
+
+This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
+
+## Task Rules
+
+- Keep tasks independent when possible.
+- Keep each step to one action with a checkable result.
+- Use exact file paths.
+- Include exact verification commands and expected outcomes.
+- Use TDD ordering when code behavior changes.
+- For ambiguous features, ask clarifying questions before finalizing the plan rather than guessing.
+
+## Task Template
+
+````markdown
+### Task N: <Name>
+
+**Files:**
+- Create: `<path>`
+- Modify: `<path>`
+- Test: `<path>`
+
+**Interfaces:**
+- Consumes: *(exact signatures this task uses from earlier tasks — function names, parameter and return types. Write `nothing` if it stands alone.)*
+- Produces: *(exact signatures later tasks will rely on. Write `nothing` if no later task builds on this.)*
+
+*This block is not optional bookkeeping. An implementer dispatched by `subagent-driven-development` sees only its own task text — never the plan, never its neighbours. This block is the only way it learns the names and types the tasks around it use. Omit it and the implementer invents a plausible name, which the next task then fails to import.*
+
+**Security flag:** `none` *(set to `security` if this task handles auth, credentials, input validation, permissions, crypto, or data access boundaries — triggers pre-implementation security review before the implementer is dispatched)*
+
+**Does NOT cover:** *(required when this task adds a condition, gate, trigger, or any "when X do Y" logic — state the scenarios the condition excludes. If an excluded scenario should be covered, revise this task before implementing.)*
+
+- [ ] **Step 1: Write failing test**
+
+```<lang>
+<the test's name and its assertions, with the spec's exact values>
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `<command>`
+Expected: FAIL with "<expected failure reason>"
+
+- [ ] **Step 3: Implement `<exact signature>` in `<path>`**
+
+<One line on the approach when the signature and the test leave a choice (which library call, which data structure). A code block only for an algorithm they do not determine.>
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `<command>`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add <files>
+git commit -m "<message>"
+```
+````
+
+## What a Step Contains
+
+A step is done when the implementer can write exactly one reasonable thing from it. That is the whole requirement: unambiguous, not complete. Each kind of step carries what makes it unambiguous and nothing more:
+
+- **A test step:** the test's name and its assertions, as code, with the spec's exact values in them.
+- **A code step:** the exact signature (name, parameters, return type), the file it lives in, and the specific values the spec pins. The implementer writes the body. A body appears only for an algorithm the signature and tests do not determine.
+- **A content step** (config, data, prose — including skill, doc, and manifest files): the exact text to write, or the exact before/after of the edit. There is no signature to derive it from, so the text itself is the decision.
+- **A verification step:** the command to run and the output that means it passed.
+- **A reference to another task:** that task's Interfaces block says what to use; the plan does not repeat that task's code. Never write "similar to Task N" or "same pattern as Task N" — the implementer sees only its own task brief, so a pointer to another task points at nothing. If two tasks share a pattern, state it in each.
+
+A plan is the set of decisions the implementer cannot make alone. A plan longer than the code it describes has written the code instead: that code was never run, and an implementer told to follow the plan will copy its bugs faithfully.
+
+Lines that decide nothing are the opposite failure — never write them:
+
+- "TBD", "TODO", "implement later", "fill in details"
+- "Add appropriate error handling" / "add validation" / "handle edge cases"
+- "Write tests for the above" (without the test names and assertions)
+- References to types, functions, or methods not defined in any task
+
+## Quality Bar
+
+- No vague steps like "update logic".
+- No hidden dependencies between distant tasks.
+- Call out migrations, feature flags, and rollback checks when relevant.
+- Prefer small vertical slices over large horizontal phases.
+
+## Self-Review
+
+After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
+
+**1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
+
+**2. Step scan:** Every step must let the implementer write exactly one reasonable thing, and no step may carry more than that: a line that decides nothing is a gap, a function body the signature and tests already determine is a transcript. Fix both. Content steps are exempt from the transcript check — their exact text is the decision.
+
+**3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug. Check this against the Interfaces blocks: every name in a task's `Consumes` list must appear verbatim in some earlier task's `Produces` list.
+
+**4. Review Focus coverage:** For each input class or failure mode the spec implies, is there a task whose tests exercise it? The five uncovered ones most likely to bite a user go in the Review Focus section, and each line there gets its test added to the owning task. An empty section means you checked and found none.
+
+**5. Scope-reduction scan:** Search the plan for: "v1", "basic", "simple", "for now", "placeholder", "initial version", "minimal". For each hit, verify it was explicitly sanctioned by the user — not a quiet scope downgrade from what was requested. Fix any that weren't.
+
+**6. Proportion:** Compare the plan's length to the spec's (or, with no spec, to the size of the change). A plan several times longer than the spec it implements is a transcript of the program, not a plan. If code blocks are most of the document, replace bodies with signatures, test names and assertions, then re-check that each step is still unambiguous. The exact text of content steps does not count against this — a plan that edits prose or config legitimately carries that text.
+
+If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
+
+## Execution Handoff
+
+After saving the plan and completing self-review, auto-select the execution approach using the logic below, then output the ready message and **stop**. Do not invoke any execution skill until the user replies.
+
+### Selection Logic (evaluate in order)
+
+1. Current context window ≥ 60% full → **Subagent-Driven** (offload context pressure)
+2. Task count ≥ 5 → **Subagent-Driven** (fresh context per task)
+3. Tasks have heavy inter-task state sharing (each task depends on runtime state from the previous) → **Inline**
+4. Default → **Subagent-Driven**
+
+### Ready Message
+
+```
+Plan saved to `docs/plans/<filename>.md`. Ready to execute with **[Subagent-Driven / Inline Execution]** (<N> tasks[, <one-word reason>]). Reply to start, or say "inline" / "subagent" to switch.
+```
+
+**Stop here.** Do not invoke any execution skill until the user replies.
+
+### On User Reply
+
+**If Subagent-Driven:**
+- **REQUIRED SUB-SKILL:** Use superpowers-optimized:subagent-driven-development
+- Fresh subagent per task + a per-task review returning both spec and quality verdicts
+
+**If Inline Execution:**
+- **REQUIRED SUB-SKILL:** Use superpowers-optimized:executing-plans
+- Continuous execution with checkpoints for review
