@@ -1,0 +1,34 @@
+.worktrees/
+.private-journal/
+.claude/
+.DS_Store
+todo
+.CLAUDE.md
+CLAUDE.md
+codex-parity-findings.md
+loss-report.md
+
+# AI assistant artifacts
+context-snapshot.json
+project-map.md
+session-log.md
+state.md
+known-issues.md
+
+*.txt
+docs/superpowers-optimized/specs/2026-03-23-extension-ecosystem-design.md
+docs/plugin-overview.txt
+plugin.universal.old.yaml
+
+# Plans and specs never go into git (local paths and personal details)
+docs/specs/
+docs/plans/
+docs/superpowers-optimized/specs/
+docs/superpowers-optimized/plans/
+
+# Test inputs share names with the artifact and *.txt rules above; keep them tracked
+!tests/**/*.txt
+!tests/**/project-map.md
+!tests/**/state.md
+!tests/**/known-issues.md
+!tests/**/session-log.md
